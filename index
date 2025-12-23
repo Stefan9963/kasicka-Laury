@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laura - Moje Peníze</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
+        h1 { color: #2c3e50; font-size: 24px; text-align: center; }
+        .balance-box { background: #4caf50; color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; }
+        #balance { font-size: 32px; font-weight: bold; }
+        .input-group { margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-plus { background: #4caf50; }
+        .btn-minus { background: #f44336; }
+        .history { margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; }
+        .history-item { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; border-bottom: 1px solid #f9f9f9; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Kasička Laury 🌸</h1>
+    
+    <div class="balance-box">
+        <div>Aktuální stav:</div>
+        <div id="balance">0 Kč</div>
+    </div>
+
+    <div class="input-group">
+        <input type="number" id="amount" placeholder="Částka (Kč)" inputmode="numeric">
+        <input type="text" id="note" placeholder="Za co? (např. zmrzlina)">
+    </div>
+
+    <div class="btns">
+        <button class="btn-plus" onclick="updateMoney('plus')">Dostala jsem</button>
+        <button class="btn-minus" onclick="updateMoney('minus')">Utratila jsem</button>
+    </div>
+
+    <div class="history">
+        <h3>Historie:</h3>
+        <div id="history-list"></div>
+    </div>
+</div>
+
+<script>
+    let balance = parseFloat(localStorage.getItem('laura_balance')) || 0;
+    let history = JSON.parse(localStorage.getItem('laura_history')) || [];
+
+    function updateDisplay() {
+        document.getElementById('balance').innerText = balance + " Kč";
+        const list = document.getElementById('history-list');
+        list.innerHTML = '';
+        history.slice().reverse().forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `<span>${item.note}</span><span style="color: ${item.type === 'plus' ? 'green' : 'red'}">${item.type === 'plus' ? '+' : '-'}${item.amount} Kč</span>`;
+            list.appendChild(div);
+        });
+    }
+
+    function updateMoney(type) {
+        const amountInput = document.getElementById('amount');
+        const noteInput = document.getElementById('note');
+        const amount = parseFloat(amountInput.value);
+        const note = noteInput.value || (type === 'plus' ? 'Příjem' : 'Výdaj');
+
+        if (isNaN(amount) || amount <= 0) return;
+
+        if (type === 'plus') {
+            balance += amount;
+        } else {
+            balance -= amount;
+        }
+
+        history.push({ type, amount, note });
+        if (history.length > 5) history.shift(); // Udržíme jen posledních 5 záznamů
+
+        localStorage.setItem('laura_balance', balance);
+        localStorage.setItem('laura_history', JSON.stringify(history));
+
+        amountInput.value = '';
+        noteInput.value = '';
+        updateDisplay();
+    }
+
+    updateDisplay();
+</script>
+
+</body>
+</html>
