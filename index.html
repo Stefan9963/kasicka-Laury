@@ -73,8 +73,23 @@
         document.getElementById('goal-price').value = gPrice > 0 ? gPrice : '';
         
         let p = 0;
-        if (gPrice > 0) p = Math.min(Math.max(Math.floor((balance / gPrice) * 100), 0), 100);
-        document.getElementById('progress-bar').style.width = p + "%";
+        if (gPrice > 0) {
+            p = Math.min(Math.max(Math.floor((balance / gPrice) * 100), 0), 100);
+        }
+        
+        const progressBar = document.getElementById('progress-bar');
+        progressBar.style.width = p + "%";
+        
+        // --- LOGIKA BAREV TEPLOMĚRU ---
+        if (p < 50) {
+            progressBar.style.backgroundColor = "#e91e63"; // Červená/Růžová (Základ)
+        } else if (p >= 50 && p < 95) {
+            progressBar.style.backgroundColor = "#ffeb3b"; // Žlutá
+        } else {
+            progressBar.style.backgroundColor = "#4caf50"; // Zelená
+        }
+        // ------------------------------
+
         document.getElementById('goal-percent').innerText = p + "% splněno";
 
         const hl = document.getElementById('history-list');
@@ -120,3 +135,4 @@
 
 </body>
 </html>
+
