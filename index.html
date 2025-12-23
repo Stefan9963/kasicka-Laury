@@ -1,92 +1,122 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laura - Moje Peníze</title>
+    <style>
+        :root { --primary: #e91e63; --secondary: #4caf50; --bg: #fdf2f5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 10px; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 380px; box-sizing: border-box; }
+        h1 { color: #2c3e50; font-size: 22px; text-align: center; margin-top: 0; }
+        .balance-box { background: var(--secondary); color: white; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
+        #balance { font-size: 32px; font-weight: bold; }
+        .goal-section { background: #fff5f8; padding: 15px; border-radius: 15px; border: 1px dashed var(--primary); margin-bottom: 20px; }
+        .progress-container { background: #eee; border-radius: 10px; height: 12px; width: 100%; overflow: hidden; margin: 8px 0; }
+        .progress-bar { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s; }
+        input { width: 100%; padding: 12px; margin: 5px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; -webkit-appearance: none; }
+        .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        button { padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
+        .btn-plus { background: var(--secondary); }
+        .btn-minus { background: #ff9800; }
+        .history { margin-top: 20px; border-top: 1px solid #eee; }
+        .history-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
+        .reset-btn { background: none; color: #ccc; border: none; font-size: 11px; margin-top: 20px; width: 100%; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Kasička pro Lauru 🌸</h1>
+    
+    <div class="balance-box">
+        <div id="balance">0 Kč</div>
+    </div>
+
+    <div class="goal-section">
+        <div style="font-size: 14px; color: var(--primary); font-weight: bold;">🎯 Cíl: <span id="goal-name">...</span></div>
+        <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
+        <div style="font-size: 11px; text-align: right;" id="goal-percent">0% splněno</div>
+    </div>
+
+    <input type="number" id="amount" placeholder="Částka (Kč)" inputmode="numeric">
+    <input type="text" id="note" placeholder="Za co?">
+
+    <div class="btns">
+        <button class="btn-plus" onclick="updateMoney('plus')">Dostala jsem</button>
+        <button class="btn-minus" onclick="updateMoney('minus')">Utratila jsem</button>
+    </div>
+
+    <div class="history">
+        <div id="history-list"></div>
+    </div>
+
+    <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px;">
+        <input type="text" id="goal-input" placeholder="Co si přeješ?" onchange="updateGoal()" style="font-size: 12px;">
+        <input type="number" id="goal-price" placeholder="Kolik to stojí?" onchange="updateGoal()" style="font-size: 12px;">
+    </div>
+
+    <button class="reset-btn" onclick="resetAll()">Vynulovat vše</button>
+</div>
+
 <script>
-    // Načtení dat při startu
-    let balance = parseFloat(localStorage.getItem('laura_balance')) || 0;
-    let history = JSON.parse(localStorage.getItem('laura_history')) || [];
-    let goalPrice = parseFloat(localStorage.getItem('laura_goal_price')) || 0;
-    let goalName = localStorage.getItem('laura_goal_name') || "Napiš si cíl...";
+    // Všechny funkce jsou uvnitř tohoto bloku
+    let balance = parseFloat(localStorage.getItem('l_bal')) || 0;
+    let history = JSON.parse(localStorage.getItem('l_hist')) || [];
+    let gPrice = parseFloat(localStorage.getItem('l_g_p')) || 0;
+    let gName = localStorage.getItem('l_g_n') || "Napiš svůj cíl";
 
     function updateDisplay() {
-        // Zobrazení zůstatku
         document.getElementById('balance').innerText = balance.toLocaleString() + " Kč";
+        document.getElementById('goal-name').innerText = gName;
+        document.getElementById('goal-input').value = gName !== "Napiš svůj cíl" ? gName : '';
+        document.getElementById('goal-price').value = gPrice > 0 ? gPrice : '';
         
-        // Aktualizace cíle
-        document.getElementById('goal-name').innerText = goalName;
-        document.getElementById('goal-price').value = goalPrice > 0 ? goalPrice : '';
-        document.getElementById('goal-input').value = (goalName !== "Napiš si cíl...") ? goalName : '';
-        
-        // Výpočet procent
-        let percent = 0;
-        if (goalPrice > 0) {
-            percent = Math.floor((balance / goalPrice) * 100);
-            if (percent < 0) percent = 0;
-            if (percent > 100) percent = 100;
-        }
-        
-        document.getElementById('progress-bar').style.width = percent + "%";
-        document.getElementById('goal-percent').innerText = percent + "% splněno";
+        let p = 0;
+        if (gPrice > 0) p = Math.min(Math.max(Math.floor((balance / gPrice) * 100), 0), 100);
+        document.getElementById('progress-bar').style.width = p + "%";
+        document.getElementById('goal-percent').innerText = p + "% splněno";
 
-        // Výpis historie
-        const list = document.getElementById('history-list');
-        list.innerHTML = '';
-        const recentHistory = history.slice(-5).reverse();
-        recentHistory.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            const color = item.type === 'plus' ? 'green' : '#f44336';
-            const sign = item.type === 'plus' ? '+' : '-';
-            div.innerHTML = `<span>${item.note}</span><span style="color: ${color}">${sign}${item.amount} Kč</span>`;
-            list.appendChild(div);
+        const hl = document.getElementById('history-list');
+        hl.innerHTML = '';
+        history.slice(-5).reverse().forEach(i => {
+            const d = document.createElement('div');
+            d.className = 'history-item';
+            d.innerHTML = `<span>${i.note}</span><span style="color:${i.type==='plus'?'green':'red'}">${i.type==='plus'?'+':'-'}${i.amount} Kč</span>`;
+            hl.appendChild(d);
         });
     }
 
-    function updateMoney(type) {
-        const amountInput = document.getElementById('amount');
-        const noteInput = document.getElementById('note');
+    window.updateMoney = function(type) {
+        const aI = document.getElementById('amount');
+        const nI = document.getElementById('note');
+        const val = parseFloat(aI.value);
+        if (isNaN(val) || val <= 0) return;
+
+        if (type === 'plus') balance += val; else balance -= val;
+        history.push({ type, amount: val, note: nI.value || (type === 'plus' ? 'Příjem' : 'Výdaj') });
         
-        const amount = parseFloat(amountInput.value);
-        const note = noteInput.value || (type === 'plus' ? 'Příjem' : 'Výdaj');
-
-        if (isNaN(amount) || amount <= 0) {
-            alert("Zadej prosím nějaké číslo.");
-            return;
-        }
-
-        if (type === 'plus') {
-            balance += amount;
-        } else {
-            balance -= amount;
-        }
-
-        // Uložit do historie
-        history.push({ type, amount, note });
+        localStorage.setItem('l_bal', balance);
+        localStorage.setItem('l_hist', JSON.stringify(history));
         
-        // Uložit do paměti telefonu
-        localStorage.setItem('laura_balance', balance);
-        localStorage.setItem('laura_history', JSON.stringify(history));
-
-        // Vymazat pole a překreslit
-        amountInput.value = '';
-        noteInput.value = '';
+        aI.value = ''; nI.value = '';
         updateDisplay();
-    }
+    };
 
-    function updateGoal() {
-        goalPrice = parseFloat(document.getElementById('goal-price').value) || 0;
-        goalName = document.getElementById('goal-input').value || "Napiš si cíl...";
-        
-        localStorage.setItem('laura_goal_price', goalPrice);
-        localStorage.setItem('laura_goal_name', goalName);
+    window.updateGoal = function() {
+        gPrice = parseFloat(document.getElementById('goal-price').value) || 0;
+        gName = document.getElementById('goal-input').value || "Napiš svůj cíl";
+        localStorage.setItem('l_g_p', gPrice);
+        localStorage.setItem('l_g_n', gName);
         updateDisplay();
-    }
+    };
 
-    function resetAll() {
-        if(confirm("Opravdu chceš vymazat celou kasičku?")) {
-            localStorage.clear();
-            location.reload();
-        }
-    }
+    window.resetAll = function() {
+        if(confirm("Smazat vše?")) { localStorage.clear(); location.reload(); }
+    };
 
-    // První spuštění po načtení stránky
-    window.onload = updateDisplay;
+    updateDisplay();
 </script>
 
+</body>
+</html>
