@@ -4,20 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Laura - Moje Peníze</title>
+    
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/piggy-bank.png">
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/piggy-bank.png">
-    <link rel="icon" href="https://img.icons8.com/color/512/piggy-bank.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <link rel="manifest" href="manifest.json">
-    
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/piggy-bank.png">
-    <link rel="icon" href="https://img.icons8.com/color/512/piggy-bank.png">
     
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#e91e63">
+
     <style>
         :root { --primary: #e91e63; --secondary: #4caf50; --bg: #fdf2f5; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 10px; margin: 0; }
@@ -74,7 +71,6 @@
 </div>
 
 <script>
-    // Všechny funkce jsou uvnitř tohoto bloku
     let balance = parseFloat(localStorage.getItem('l_bal')) || 0;
     let history = JSON.parse(localStorage.getItem('l_hist')) || [];
     let gPrice = parseFloat(localStorage.getItem('l_g_p')) || 0;
@@ -94,15 +90,13 @@
         const progressBar = document.getElementById('progress-bar');
         progressBar.style.width = p + "%";
         
-        // --- LOGIKA BAREV TEPLOMĚRU ---
         if (p < 50) {
-            progressBar.style.backgroundColor = "#e91e63"; // Červená/Růžová (Základ)
+            progressBar.style.backgroundColor = "#e91e63"; 
         } else if (p >= 50 && p < 95) {
-            progressBar.style.backgroundColor = "#ffeb3b"; // Žlutá
+            progressBar.style.backgroundColor = "#ffeb3b"; 
         } else {
-            progressBar.style.backgroundColor = "#4caf50"; // Zelená
+            progressBar.style.backgroundColor = "#4caf50"; 
         }
-        // ------------------------------
 
         document.getElementById('goal-percent').innerText = p + "% splněno";
 
@@ -149,5 +143,3 @@
 
 </body>
 </html>
-
-
